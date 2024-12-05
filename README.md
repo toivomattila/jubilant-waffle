@@ -5,6 +5,7 @@ This repository contains Python scripts for image processing and analysis using 
 ## Requirements
 
 - Python 3.x
+- UV (for package management)
 - PIL (Python Imaging Library)
 - requests (for LLaVA API interactions)
 - Ollama with LLaVA model (for image analysis)
