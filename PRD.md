@@ -37,6 +37,10 @@ The system must maintain persistent storage of the following information:
 - Support for multiple tags per image
 - All tags must be stored in Title Case format (first letter of each word capitalized, rest lowercase)
 - Tags can only contain letters and spaces (underscores should be converted to spaces)
+- Track confidence metrics for each tag:
+  - Number of times an image has been processed
+  - Count of times each tag was generated for an image
+  - Confidence percentage (tag occurrence count / total processing count)
 
 #### Data Relationships
 - Each image must be able to have multiple associated tags
@@ -61,6 +65,12 @@ The system must maintain persistent storage of the following information:
 - Real-time image analysis using LLaVA model
 - Configurable prompts for tag generation
 - Error handling for API failures
+- Timeout mechanism for image processing to handle model hangs
+  - Skip images that exceed the processing timeout
+  - Continue with the next image in queue when timeout occurs
+- Support for configurable confidence thresholds:
+  - User-definable minimum confidence level for tag inclusion
+  - Allow multiple tagging runs on the same image to build confidence metrics
 
 ### Database
 - SQLite for persistent storage

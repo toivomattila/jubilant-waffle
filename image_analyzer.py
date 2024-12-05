@@ -130,7 +130,7 @@ Return only the JSON object without any additional text."""
             }
 
             # Make the API request
-            response = requests.post(api_url, json=payload)
+            response = requests.post(api_url, json=payload, timeout=5)
             response.raise_for_status()
 
             # Process the response

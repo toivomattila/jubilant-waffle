@@ -18,8 +18,9 @@ def get_database_connection():
     return sqlite3.connect('image_tags.sqlite', check_same_thread=False)
 
 # Load all tags
-def load_all_tags(conn):
-    return pd.read_sql_query("SELECT DISTINCT name FROM tags ORDER BY name", conn)['name'].tolist()
+@st.cache_data
+def load_all_tags(_conn):  # Conn is not JSON serializable. Include underscore to exclude from cache
+    return pd.read_sql_query("SELECT DISTINCT name FROM tags ORDER BY name", _conn)['name'].tolist()
 
 # Load images with filters
 def load_images(conn, selected_tags=None, date_range=None, filename_search=None):
@@ -81,10 +82,10 @@ def main():
     selected_tags = st.multiselect("Select Tags", all_tags)
     
     # Date filter
-    all_dates = pd.read_sql_query(
-        "SELECT MIN(DATE(created_at)) as min_date, MAX(DATE(created_at)) as max_date FROM images",
-        conn
-    ).iloc[0]
+    # all_dates = pd.read_sql_query(
+    #     "SELECT MIN(DATE(created_at)) as min_date, MAX(DATE(created_at)) as max_date FROM images",
+    #     conn
+    # ).iloc[0]
     
     # date_range = st.sidebar.date_input(
     #     "Date Range",
