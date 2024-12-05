@@ -13,6 +13,7 @@ wheels/
 *.jpg
 *.jpeg
 *.png
+images/
 
 # Development
 *.log
@@ -21,3 +22,4 @@ wheels/
 *.db
 *.sqlite3
 *.sqlite
+dev*

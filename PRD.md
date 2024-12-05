@@ -35,6 +35,8 @@ The system must maintain persistent storage of the following information:
 - Association between images and their tags
 - Storage of AI-generated tags for each image
 - Support for multiple tags per image
+- All tags must be stored in Title Case format (first letter of each word capitalized, rest lowercase)
+- Tags can only contain letters and spaces (underscores should be converted to spaces)
 
 #### Data Relationships
 - Each image must be able to have multiple associated tags

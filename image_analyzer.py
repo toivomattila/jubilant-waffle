@@ -9,11 +9,11 @@ import re
 class ImageAnalyzer:
     """Class responsible for AI-powered image analysis using Ollama with LLaVA model."""
     
-    def __init__(self, ollama_host: str = "http://localhost:11434"):
+    def __init__(self, ollama_host: str = "http://localhost:11434", log_level: int = logging.WARNING):
         """Initialize the ImageAnalyzer with Ollama host configuration."""
         self.ollama_host = ollama_host
         self.model = "llava"
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=log_level)
         self.logger = logging.getLogger(__name__)
 
     def _prepare_image(self, image_path: str) -> Image.Image:
@@ -150,6 +150,10 @@ Return only the JSON object without any additional text."""
                     all_tags.update(json_obj['tags'])
             
             tags = list(all_tags)
+            # Convert underscores to spaces and title case
+            tags = [tag.replace('_', ' ') for tag in tags]
+            # Convert to title case
+            tags = [tag.title() for tag in tags]
             self.logger.info(f"Generated {len(tags)} tags for image: {image_path}")
             return tags
 
@@ -185,9 +189,10 @@ if __name__ == "__main__":
     analyzer = ImageAnalyzer()
     try:
         tags = analyzer.analyze_image(args.image_path)
-        print("\nGenerated tags:")
+        # print("\nGenerated tags:")
         for tag in tags:
-            print(f"- {tag}")
+            # print(f"- {tag}")
+            print(tag)
     except Exception as e:
         print(f"Error: {str(e)}")
         exit(1) 

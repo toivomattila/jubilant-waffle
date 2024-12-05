@@ -2,13 +2,16 @@ import os
 import logging
 from typing import List, Optional
 from pathlib import Path
+
+from tqdm import tqdm
+
 from image_analyzer import ImageAnalyzer
 from db_manager import DatabaseManager
 
 class ImagePipeline:
     """Pipeline for processing images and storing their tags."""
     
-    def __init__(self, image_dir: str = "images"):
+    def __init__(self, image_dir: str = "images", log_level: int = logging.WARNING):
         """
         Initialize the image processing pipeline.
         
@@ -25,7 +28,7 @@ class ImagePipeline:
         
         # Configure logging
         logging.basicConfig(
-            level=logging.INFO,
+            level=log_level,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
 
@@ -85,7 +88,7 @@ class ImagePipeline:
         # Get all jpg files
         image_files = list(self.image_dir.glob("*.jpg")) + list(self.image_dir.glob("*.jpeg"))
         
-        for image_path in image_files:
+        for image_path in tqdm(image_files, desc="Processing images", unit="image"):
             image_id = self.process_image(image_path)
             if image_id is not None:
                 processed_ids.append(image_id)
