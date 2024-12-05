@@ -20,3 +20,12 @@ Tag(s) has been selected in the UI:
 Show item count in the UI for each tag:
 - "If I filter the images with this tag, how many images will I get?"
 - I have no idea how computationally expensive this is to implement
+
+If database contains images that don't exist anymore, the UI currently shows a bunch of errors. It should just silently ignore them instead.
+
+Operate the image processing pipeline through the UI
+
+Support multiple collections of images
+- I.e. "My photos" and "My friends photos"
+- Select collection i.e. from sidebar
+- Show images from selected collection
