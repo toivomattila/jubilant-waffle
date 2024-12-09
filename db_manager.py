@@ -25,7 +25,8 @@ class DatabaseManager:
                         file_path TEXT UNIQUE NOT NULL,
                         md5_hash TEXT UNIQUE NOT NULL,
                         original_filename TEXT NOT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        process_count INTEGER DEFAULT 0
                     )
                 """)
                 
@@ -37,11 +38,12 @@ class DatabaseManager:
                     )
                 """)
                 
-                # Create image_tags junction table
+                # Create image_tags junction table with confidence metrics
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS image_tags (
                         image_id INTEGER,
                         tag_id INTEGER,
+                        occurrence_count INTEGER DEFAULT 1,
                         FOREIGN KEY (image_id) REFERENCES images (id),
                         FOREIGN KEY (tag_id) REFERENCES tags (id),
                         UNIQUE(image_id, tag_id)
@@ -87,7 +89,7 @@ class DatabaseManager:
 
     def add_tags(self, image_id: int, tags: List[str]):
         """
-        Add tags for an image.
+        Add tags for an image and update confidence metrics.
         
         Args:
             image_id: ID of the image
@@ -97,16 +99,25 @@ class DatabaseManager:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 
+                # Increment the process count for the image
+                cursor.execute("""
+                    UPDATE images 
+                    SET process_count = process_count + 1 
+                    WHERE id = ?
+                """, (image_id,))
+                
                 for tag in tags:
                     # Insert or get tag
                     cursor.execute("INSERT OR IGNORE INTO tags (name) VALUES (?)", (tag,))
                     cursor.execute("SELECT id FROM tags WHERE name = ?", (tag,))
                     tag_id = cursor.fetchone()[0]
                     
-                    # Link tag to image
+                    # Update tag occurrence count or insert new relationship
                     cursor.execute("""
-                        INSERT OR IGNORE INTO image_tags (image_id, tag_id)
-                        VALUES (?, ?)
+                        INSERT INTO image_tags (image_id, tag_id, occurrence_count)
+                        VALUES (?, ?, 1)
+                        ON CONFLICT(image_id, tag_id) DO UPDATE SET
+                        occurrence_count = occurrence_count + 1
                     """, (image_id, tag_id))
 
                 conn.commit()
@@ -115,27 +126,38 @@ class DatabaseManager:
             self.logger.error(f"Error adding tags: {e}")
             raise
 
-    def get_image_tags(self, image_id: int) -> List[str]:
+    def get_image_tags(self, image_id: int) -> List[dict]:
         """
-        Get all tags for an image.
+        Get all tags and their confidence metrics for an image.
         
         Args:
             image_id: ID of the image
             
         Returns:
-            List[str]: List of tags
+            List[dict]: List of tags with confidence metrics
         """
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
-                    SELECT t.name
+                    SELECT 
+                        t.name,
+                        it.occurrence_count,
+                        i.process_count,
+                        CAST(it.occurrence_count AS FLOAT) / i.process_count AS confidence
                     FROM tags t
                     JOIN image_tags it ON t.id = it.tag_id
+                    JOIN images i ON it.image_id = i.id
                     WHERE it.image_id = ?
+                    ORDER BY confidence DESC
                 """, (image_id,))
                 
-                return [row[0] for row in cursor.fetchall()]
+                return [{
+                    'name': row[0],
+                    'occurrence_count': row[1],
+                    'process_count': row[2],
+                    'confidence': row[3]
+                } for row in cursor.fetchall()]
                 
         except sqlite3.Error as e:
             self.logger.error(f"Error getting image tags: {e}")

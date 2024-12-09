@@ -39,6 +39,7 @@ class ImagePipeline:
     def process_image(self, image_path: Path) -> Optional[int]:
         """
         Process a single image and store its tags.
+        The same image can be processed multiple times to build confidence metrics.
         
         Args:
             image_path: Path to the image file
@@ -50,23 +51,24 @@ class ImagePipeline:
             # Get MD5 hash from filename
             md5_hash = self.get_hash_from_filename(image_path)
             
-            # Check if image already processed
+            # Get or create image record
             existing_image = self.db.get_image_by_hash(md5_hash)
             if existing_image:
-                self.logger.info(f"Image already processed: {image_path.name}")
-                return existing_image["id"]
-            
-            # Add image to database
-            image_id = self.db.add_image(
-                str(image_path),
-                md5_hash,
-                image_path.name
-            )
+                image_id = existing_image["id"]
+                self.logger.info(f"Processing existing image again: {image_path.name}")
+            else:
+                # Add new image to database
+                image_id = self.db.add_image(
+                    str(image_path),
+                    md5_hash,
+                    image_path.name
+                )
+                self.logger.info(f"Added new image to database: {image_path.name}")
             
             # Generate tags
             tags_data = self.analyzer.analyze_image(str(image_path))
             
-            # Store tags in database
+            # Store tags in database (this will now update confidence metrics)
             self.db.add_tags(image_id, tags_data)
             
             self.logger.info(f"Successfully processed image: {image_path.name}")
@@ -98,8 +100,16 @@ class ImagePipeline:
 
 def main():
     """Main entry point for the image processing pipeline."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Process images and generate tags using LLaVA model.')
+    parser.add_argument('--repeat', type=int, default=1, help='Number of times to repeat the tagging process (default: 1)')
+    args = parser.parse_args()
+    
     pipeline = ImagePipeline()
-    pipeline.process_directory()
+    for i in range(args.repeat):
+        print(f"\nProcessing round {i + 1} of {args.repeat}")
+        pipeline.process_directory()
 
 if __name__ == "__main__":
     main() 

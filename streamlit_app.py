@@ -20,7 +20,15 @@ def get_database_connection():
 # Load all tags
 @st.cache_data
 def load_all_tags(_conn):  # Conn is not JSON serializable. Include underscore to exclude from cache
-    return pd.read_sql_query("SELECT DISTINCT name FROM tags ORDER BY name", _conn)['name'].tolist()
+    query = """
+    SELECT t.name
+    FROM tags t
+    JOIN image_tags it ON t.id = it.tag_id
+    GROUP BY t.name
+    HAVING COUNT(*) > 10
+    ORDER BY t.name
+    """
+    return pd.read_sql_query(query, _conn)['name'].tolist()
 
 # Load images with filters
 def load_images(conn, selected_tags=None, date_range=None, filename_search=None):
@@ -80,6 +88,8 @@ def main():
     # Tag filter
     all_tags = load_all_tags(conn)
     selected_tags = st.multiselect("Select Tags", all_tags)
+    # Print the number of all tags
+    st.write(f"Number of available tags: {len(all_tags)}")
     
     # Date filter
     # all_dates = pd.read_sql_query(

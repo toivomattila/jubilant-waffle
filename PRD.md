@@ -20,6 +20,10 @@ The Image Tagging Application is a backend system designed to process, organize,
 - Integration with Ollama using the LLaVA model
 - Automatic generation of descriptive tags for images
 - Support for custom prompts to guide the AI analysis
+- CLI support for repeated tagging:
+  - Option to process the entire image set multiple times
+  - Builds more accurate confidence metrics through repeated analysis
+  - Helps identify consistently recognized features in images
 
 ### 3. Data Storage Requirements
 
@@ -71,6 +75,10 @@ The system must maintain persistent storage of the following information:
 - Support for configurable confidence thresholds:
   - User-definable minimum confidence level for tag inclusion
   - Allow multiple tagging runs on the same image to build confidence metrics
+- CLI support for repeated tagging:
+  - Option to process the entire image set multiple times
+  - Builds more accurate confidence metrics through repeated analysis
+  - Helps identify consistently recognized features in images
 
 ### Database
 - SQLite for persistent storage
